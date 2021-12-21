@@ -1,0 +1,10 @@
+version: 2
+updates:
+  - package-ecosystem: "maven"
+    directory: "/java/amazon-kinesis-producer"
+    schedule: 
+      interval: "daily"
+  - package-ecosystem: "maven"
+    directory: "/java/amazon-kinesis-producer-sample"
+    schedule: 
+      interval: "daily"
