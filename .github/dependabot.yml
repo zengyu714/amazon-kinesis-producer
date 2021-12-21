@@ -5,6 +5,6 @@ updates:
     schedule: 
       interval: "daily"
   - package-ecosystem: "maven"
-    directory: "/javaamazon-kinesis-producer-sample"
+    directory: "/java/amazon-kinesis-producer-sample"
     schedule: 
       interval: "daily"
