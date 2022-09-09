@@ -1,25 +1,72 @@
 name: KPL Builds
 on: [ push ]
 jobs:
-  Test-Aws-Credentials:
+  Build-linux-aarch64:
+    # The host should always be Linux
     runs-on: ubuntu-latest
-    # These permissions are needed to interact with GitHub's OIDC Token endpoint.
-    permissions:
-      id-token: write
-      contents: read
+    name: Build KPL on Linux/aarch64
     steps:
-      - name: Check out repository code
-        uses: actions/checkout@v3
-      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
-
-      - name: Configure AWS credentials from Test account
-        uses: aws-actions/configure-aws-credentials@v1
+      - uses: actions/checkout@v3
+      - uses: uraimo/run-on-arch-action@v2
+        name: Build kinesis_producer binary
+        id: build-aarch
         with:
-          role-to-assume: arn:aws:iam::448057645220:role/GithubRoleCreationStack-Role-JG4EMDNSYEO1
-          aws-region: us-west-2
-      - name: Copy files to the test website with the AWS CLI
+          arch: aarch64
+          distro: ubuntu_latest
+          githubToken: ${{ github.token }}  # not required, but can speed up the build
+          setup: | # Create a directory for storing the output binary 
+            mkdir -p "${PWD}/artifacts"
+          dockerRunArgs: | # Mount the artifacts directory as /artifacts in the container
+            --volume "${PWD}/artifacts:/artifacts"
+          env: |
+            artifact_name: kinesis_producer
+          shell: /bin/sh
+          install: |
+            apt-get update -q -y
+            apt-get install -q -y build-essential ca-certificates cmake wget gzip perl git maven tar zlib1g default-jre
+          run: |  # Produce a binary kinesis_producer and place it in the mounted volume
+            ls
+            
+            cp $(which git) "/linux-$(uname -m)/${artifact_name}"
+            echo "Produced kinesis_producer at /artifacts/${artifact_name}"
+
+      - name: Show the artifact
+        # Items placed in /artifacts in the container will be in
+        # ${PWD}/artifacts on the host.
         run: |
-          aws s3 sync . s3://my-github-workflows-test-bucket-for-kpl-builds
+          ls -al "${PWD}/artifacts"
+
+      - name: Get the output
+        run: |
+          echo "The uname output was ${{ steps.build-aarch.outputs.uname }}"
+#
+#      - name: Get AWS credentials from the test account
+#        uses: aws-actions/configure-aws-credentials@v1
+#        with:
+#          # TODO: update the role ARN
+#          role-to-assume: arn:aws:iam::448057645220:role/GithubRoleCreationStack-Role-JG4EMDNSYEO1
+#          aws-region: us-west-2
+
+
+#  Test-Aws-Credentials:
+#    runs-on: ubuntu-latest
+#    # These permissions are needed to interact with GitHub's OIDC Token endpoint.
+#    permissions:
+#      id-token: write
+#      contents: read
+#    steps:
+#      - name: Check out repository code
+#        uses: actions/checkout@v3
+#      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
+#
+#      - name: Configure AWS credentials from Test account
+#        uses: aws-actions/configure-aws-credentials@v1
+#        with:
+#          role-to-assume: arn:aws:iam::448057645220:role/GithubRoleCreationStack-Role-JG4EMDNSYEO1
+#          aws-region: us-west-2
+#      - name: Copy files to the test website with the AWS CLI
+#        run: |
+#          aws s3 sync . s3://my-github-workflows-test-bucket-for-kpl-builds
 
 #  Explore-GitHub-Actions:
 #    runs-on: ubuntu-latest
