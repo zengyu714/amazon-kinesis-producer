@@ -18,27 +18,23 @@ jobs:
             mkdir -p "${PWD}/artifacts"
           dockerRunArgs: | # Mount the artifacts directory as /artifacts in the container
             --volume "${PWD}/artifacts:/artifacts"
-          env: |
-            artifact_name: kinesis_producer
           shell: /bin/sh
           install: |
             apt-get update -q -y
-            apt-get install -q -y build-essential ca-certificates cmake wget gzip perl git maven tar zlib1g default-jre
+            apt-get install -q -y build-essential apt-utils ca-certificates cmake wget curl gzip perl git maven tar zlib1g openjdk-8-jdk
           run: |  # Produce a binary kinesis_producer and place it in the mounted volume
             ls
-            
-            cp $(which git) "/linux-$(uname -m)/${artifact_name}"
-            echo "Produced kinesis_producer at /artifacts/${artifact_name}"
+            ./bootstrap.sh  
+            cd java/amazon-kinesis-producer/src/main/resources/amazon-kinesis-producer-native-binaries/linux-`uname -m`
+            ls
+            zip kinesis-producer.zip kinesis_producer
+            cp kinesis-producer.zip "/artifacts/"
+            echo "Produced kinesis_producer at /artifacts"
 
       - name: Show the artifact
-        # Items placed in /artifacts in the container will be in
-        # ${PWD}/artifacts on the host.
         run: |
           ls -al "${PWD}/artifacts"
 
-      - name: Get the output
-        run: |
-          echo "The uname output was ${{ steps.build-aarch.outputs.uname }}"
 #
 #      - name: Get AWS credentials from the test account
 #        uses: aws-actions/configure-aws-credentials@v1
