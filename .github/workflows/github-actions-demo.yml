@@ -10,7 +10,8 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
-        run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
+      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
+
       - name: Configure AWS credentials from Test account
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -19,6 +20,7 @@ jobs:
       - name: Copy files to the test website with the AWS CLI
         run: |
           aws s3 sync . s3://my-github-workflows-test-bucket-for-kpl-builds
+
 #  Explore-GitHub-Actions:
 #    runs-on: ubuntu-latest
 #    steps:
